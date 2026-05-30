@@ -23,9 +23,14 @@ A **Go / Gin** API serves draw data and computed statistics to a
 **Next.js (TypeScript)** frontend, with **MySQL** for storage. The Next.js app
 is tested with **Jest**.
 
-<Diagram code={`flowchart LR
-  C[Next.js + TypeScript] -->|REST| A[Go + Gin API]
-  A --> D[(MySQL)]`} />
+<Diagram
+  caption="Typed frontend, computed stats server-side"
+  nodes={[
+    { label: "Next.js + TS", kind: "external" },
+    { label: "Go + Gin API", sub: "REST", kind: "service" },
+    { label: "MySQL", kind: "store" },
+  ]}
+/>
 
 ### Design decisions
 

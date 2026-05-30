@@ -23,10 +23,22 @@ A **Go** service pulls item data from the **Google Sheets API**, composites the
 item art and stats into a PNG on the fly, and serves it over HTTP. Operational
 metrics ship to **Grafana Cloud**.
 
-<Diagram code={`flowchart LR
-  G[(Google Sheet)] --> S[Go image service]
-  S -->|PNG| W[Browser / share]
-  S -->|metrics| M[Grafana Cloud]`} />
+<Diagram
+  caption="Sheet as the source of truth; metrics to Grafana"
+  nodes={[
+    { label: "Google Sheet", kind: "store" },
+    { label: "Go image service", sub: "composites PNG", kind: "service" },
+    { label: "Browser / share", kind: "external" },
+  ]}
+/>
+
+<Diagram
+  caption="Observability"
+  nodes={[
+    { label: "Go image service", kind: "service" },
+    { label: "Grafana Cloud", sub: "metrics", kind: "external" },
+  ]}
+/>
 
 ### Design decisions
 

@@ -67,7 +67,7 @@ catch errors, then SSHes into the server (`appleboy/ssh-action`, secrets
 
 ```bash
 # on the server
-cd /root/src && git clone https://github.com/joeyrivera/app-launcher.git
+cd /root/src && git clone git@github.com:joeyrivera/app-launcher.git
 cd app-launcher && npm ci && npm run build
 
 cp deploy/nginx.conf /etc/nginx/sites-available/app-launcher

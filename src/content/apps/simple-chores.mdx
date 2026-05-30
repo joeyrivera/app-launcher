@@ -26,16 +26,16 @@ assignments, completions, and point balances live in **MySQL**. The whole thing
 is containerized with **Docker** and runs on a **Kubernetes** cluster behind an
 ingress with automatic TLS.
 
-<Diagram code={`flowchart LR
-  U[Kids & Parents] -->|HTTPS| I[Ingress + TLS]
-  I --> R[React SPA]
-  R -->|REST/JSON| A[Go API]
-  A --> D[(MySQL)]
-  subgraph Kubernetes
-    R
-    A
-    D
-  end`} />
+<Diagram
+  caption="Kubernetes-hosted, TLS at the edge"
+  nodes={[
+    { label: "Kids & Parents", kind: "external" },
+    { label: "Ingress", sub: "TLS" },
+    { label: "React SPA" },
+    { label: "Go API", sub: "REST/JSON", kind: "service" },
+    { label: "MySQL", kind: "store" },
+  ]}
+/>
 
 ### Design decisions
 

@@ -23,10 +23,22 @@ A **Node.js / Express** server pairs with a **React (Vite)** client.
 **Socket.io** carries real-time messages over WebSockets, message history lives
 in **MySQL**, and **Twilio** powers voice calling.
 
-<Diagram code={`flowchart LR
-  C[React + Vite client] -->|WebSocket| S[Express + Socket.io]
-  S --> D[(MySQL)]
-  S -->|Voice| T[Twilio]`} />
+<Diagram
+  caption="Real-time over WebSockets; Twilio for voice"
+  nodes={[
+    { label: "React + Vite", kind: "external" },
+    { label: "Express + Socket.io", sub: "WebSocket", kind: "service" },
+    { label: "MySQL", kind: "store" },
+  ]}
+/>
+
+<Diagram
+  caption="Voice path"
+  nodes={[
+    { label: "Express server", kind: "service" },
+    { label: "Twilio", sub: "voice", kind: "external" },
+  ]}
+/>
 
 ### Design decisions
 
