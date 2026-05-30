@@ -43,3 +43,7 @@ jobs:
             git pull origin main
             npm ci
             npm run build
+            # Publish to a web-readable dir (the repo lives under /root, 0700,
+            # which nginx's www-data user can't traverse).
+            mkdir -p /var/www/app-launcher
+            rsync -a --delete dist/ /var/www/app-launcher/
