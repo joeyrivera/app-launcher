@@ -1,0 +1,59 @@
+---
+name: App Launcher
+tagline: This site — a launcher & showcase for everything here
+description: The site you're looking at. A content-driven launcher that lists my apps as tiles, with a detail page for each, deployed automatically to my own server.
+liveUrl: https://apps.myexperiments.app
+repoUrl: https://github.com/joeyrivera/app-launcher
+screenshot: /screenshots/app-launcher.jpg
+tech: ["Astro", "TypeScript", "Tailwind CSS", "MDX", "GitHub Actions", "nginx"]
+accent: "#6366f1"
+status: live
+featured: true
+order: 0
+---
+
+import Diagram from '../../components/Diagram.astro';
+
+## What it is
+
+Yes — this very site is one of the apps. It's a launcher and portfolio: each
+app is a tile you can launch, with a detail page describing what it is and how
+it was built. The whole thing is **content-driven** — adding an app is a single
+Markdown file, no code changes — so it keeps up as I build more.
+
+## How it's built
+
+A static **Astro** site with typed **content collections**: every app is an
+`.mdx` file whose frontmatter is validated at build time, and the grid and
+detail pages are generated from it. Styling is **Tailwind CSS**; detail pages
+use **MDX** for prose, code, and the lightweight HTML/CSS architecture diagrams
+(no client-side diagram engine — the page ships almost no JavaScript).
+
+It's deliberately low-footprint and self-hosted on the same box as the other
+apps, served as plain static files by **nginx** — there's no app process to
+keep running.
+
+<Diagram
+  caption="Push to deploy: build in CI, ship to the server, serve static files"
+  nodes={[
+    { label: "git push", kind: "external" },
+    { label: "GitHub Actions", sub: "build + SSH", kind: "service" },
+    { label: "Linode", sub: "rebuild", kind: "service" },
+    { label: "nginx", sub: "/var/www" },
+    { label: "Visitors", kind: "external" },
+  ]}
+/>
+
+### Design decisions
+
+- **Content collections over a CMS** — the apps list is just typed files in the
+  repo; a bad entry fails the build instead of breaking the live site.
+- **Zero-JS diagrams** — architecture diagrams are plain HTML/CSS boxes, so
+  there's no heavy diagramming library shipped to visitors.
+- **Static + nginx** — no server process, no database; the lightest thing that
+  could possibly work.
+
+## What I learned
+
+Constraining myself to "adding an app must be one file" forced a clean data
+model up front, and it's what makes the site genuinely easy to keep current.

@@ -56,8 +56,19 @@ const {
       <slot />
     </main>
 
-    <footer class="mx-auto max-w-6xl px-6 py-10 text-center text-sm text-slate-500 dark:text-slate-400">
-      Built by Joey Rivera · A showcase of things I've made
+    <footer class="mx-auto flex max-w-6xl flex-col items-center gap-3 px-6 py-10 text-center text-sm text-slate-500 dark:text-slate-400">
+      <a
+        href="https://github.com/joeyrivera/app-launcher"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-1.5 font-medium transition hover:border-slate-300 hover:text-slate-900 dark:border-slate-700 dark:hover:text-white"
+      >
+        <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 2C6.48 2 2 6.48 2 12c0 4.42 2.87 8.17 6.84 9.5.5.09.66-.22.66-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.89 1.53 2.34 1.09 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02.8-.22 1.65-.33 2.5-.34.85 0 1.7.12 2.5.34 1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.57 4.94.36.31.68.92.68 1.85v2.74c0 .27.16.58.67.48A10 10 0 0022 12c0-5.52-4.48-10-10-10z" />
+        </svg>
+        View this project on GitHub
+      </a>
+      <span>Built by Joey Rivera · A showcase of things I've made</span>
     </footer>
   </body>
 </html>
