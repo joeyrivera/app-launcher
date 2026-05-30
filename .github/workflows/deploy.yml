@@ -40,7 +40,9 @@ jobs:
           script: |
             set -e
             cd /root/src/app-launcher
-            git pull origin main
+            # Match the remote exactly (robust against force-pushes / local drift).
+            git fetch origin main
+            git reset --hard origin/main
             npm ci
             npm run build
             # Publish to a web-readable dir (the repo lives under /root, 0700,

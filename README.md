@@ -50,8 +50,18 @@ Adding an app is **one file** — no layout changes:
      A[Client] --> B[API] --> C[(DB)]`} />
    ```
 
-4. Drop an optional screenshot in `public/apps/`. Commit and push — CI builds
-   and deploys.
+4. Add an optional screenshot. For apps with a public `liveUrl`, capture one
+   automatically (Playwright is not a project dependency — install on demand):
+
+   ```bash
+   npm install --no-save playwright
+   npx playwright install chromium
+   node scripts/capture-screenshots.mjs   # writes public/screenshots/<slug>.*
+   ```
+
+   Then set `screenshot: /screenshots/<slug>.jpg` in the app's frontmatter.
+   Without a screenshot, the tile shows a generated monogram. Commit and push —
+   CI builds and deploys.
 
 ## Deployment
 
