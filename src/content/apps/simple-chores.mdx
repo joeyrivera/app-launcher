@@ -1,0 +1,53 @@
+---
+name: Simple Chores
+tagline: Family chore tracking that kids actually use
+description: A web app for assigning, tracking, and rewarding household chores. Kids check off tasks, parents approve them, and points add up toward rewards.
+liveUrl: https://simplechores.joeyrivera.com
+tech: ["Go", "React", "MySQL", "Docker", "Kubernetes"]
+accent: "#22c55e"
+status: live
+featured: true
+order: 1
+---
+
+import Diagram from '../../components/Diagram.astro';
+
+## What it is
+
+Simple Chores keeps our household running without the nagging. Each kid has a
+list of chores; they tap to mark a chore done, a parent approves it, and points
+accumulate toward rewards they pick. It's deliberately simple — large tap
+targets, no clutter — so even the youngest can use it on a tablet.
+
+## How it's built
+
+A **Go** REST API backs a **React** single-page app. Chore definitions,
+assignments, completions, and point balances live in **MySQL**. The whole thing
+is containerized with **Docker** and runs on a **Kubernetes** cluster behind an
+ingress with automatic TLS.
+
+<Diagram code={`flowchart LR
+  U[Kids & Parents] -->|HTTPS| I[Ingress + TLS]
+  I --> R[React SPA]
+  R -->|REST/JSON| A[Go API]
+  A --> D[(MySQL)]
+  subgraph Kubernetes
+    R
+    A
+    D
+  end`} />
+
+### Design decisions
+
+- **Go API** for a small, fast, statically-compiled binary that's trivial to
+  containerize and cheap to run.
+- **Approval workflow** — completions aren't trusted blindly; a parent approves
+  before points are awarded, which keeps the incentive honest.
+- **Points → rewards** modeled as a simple ledger so balances are always the sum
+  of approved completions minus redemptions.
+
+## What I learned
+
+Building for kids forces real UX discipline: anything ambiguous gets misused.
+The approval step started as an afterthought and became the feature that made
+the whole system trustworthy for the family.

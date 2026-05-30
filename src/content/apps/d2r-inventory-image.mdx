@@ -1,0 +1,42 @@
+---
+name: D2R Inventory Image
+tagline: Auto-generated Diablo II item showcase images
+description: A Go service that turns a spreadsheet of Diablo II Resurrected items into shareable inventory images, with metrics piped to Grafana.
+liveUrl: https://d2r.myexperiments.app/images/azeroti.png
+tech: ["Go", "Google Sheets API", "Grafana Cloud"]
+accent: "#ef4444"
+status: live
+order: 3
+---
+
+import Diagram from '../../components/Diagram.astro';
+
+## What it is
+
+A fun side project for **Diablo II: Resurrected**. It reads a curated list of
+items from a Google Sheet and renders a clean, shareable "inventory" image —
+handy for showing off finds in trade communities.
+
+## How it's built
+
+A **Go** service pulls item data from the **Google Sheets API**, composites the
+item art and stats into a PNG on the fly, and serves it over HTTP. Operational
+metrics ship to **Grafana Cloud**.
+
+<Diagram code={`flowchart LR
+  G[(Google Sheet)] --> S[Go image service]
+  S -->|PNG| W[Browser / share]
+  S -->|metrics| M[Grafana Cloud]`} />
+
+### Design decisions
+
+- **Sheets as the database** — non-technical edits to the item list need no
+  deploy; the source of truth is a spreadsheet anyone can update.
+- **On-the-fly image compositing** in Go keeps the service stateless and the
+  output always fresh.
+- **Grafana metrics** make a hobby service observable, just like a production one.
+
+## What I learned
+
+Treating Google Sheets as a lightweight CMS is a surprisingly pragmatic pattern
+for small projects where the content owner isn't a developer.

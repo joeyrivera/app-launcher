@@ -1,0 +1,93 @@
+---
+interface Props {
+  tags: string[];
+}
+const { tags } = Astro.props;
+---
+<div class="mb-8 flex flex-col gap-4">
+  <div class="relative">
+    <svg
+      class="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"
+      fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"
+    >
+      <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z" />
+    </svg>
+    <input
+      id="app-search"
+      type="search"
+      placeholder="Search apps…"
+      autocomplete="off"
+      class="w-full rounded-xl border border-slate-200 bg-white py-3 pl-11 pr-4 text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-[var(--page-accent,#6366f1)] focus:ring-2 focus:ring-[var(--page-accent,#6366f1)]/30 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+    />
+  </div>
+
+  <div id="tag-filters" class="flex flex-wrap gap-2">
+    <button
+      type="button"
+      data-tag="all"
+      class="tag-chip rounded-full border border-transparent bg-[var(--page-accent,#6366f1)] px-3 py-1.5 text-sm font-medium text-white"
+    >
+      All
+    </button>
+    {
+      tags.map((tag) => (
+        <button
+          type="button"
+          data-tag={tag.toLowerCase()}
+          class="tag-chip rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-600 transition hover:border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
+        >
+          {tag}
+        </button>
+      ))
+    }
+  </div>
+</div>
+
+<script>
+  const bind = () => {
+    const search = document.getElementById('app-search') as HTMLInputElement | null;
+    const grid = document.getElementById('tile-grid');
+    const noResults = document.getElementById('no-results');
+    const chips = Array.from(document.querySelectorAll<HTMLButtonElement>('.tag-chip'));
+    if (!search || !grid) return;
+
+    const tiles = Array.from(grid.querySelectorAll<HTMLElement>('[data-name]'));
+    let activeTag = 'all';
+
+    const paint = () => {
+      chips.forEach((c) => {
+        const on = c.dataset.tag === activeTag;
+        c.classList.toggle('bg-[var(--page-accent,#6366f1)]', on);
+        c.classList.toggle('text-white', on);
+        c.classList.toggle('border-transparent', on);
+      });
+    };
+
+    const apply = () => {
+      const q = search.value.trim().toLowerCase();
+      let visible = 0;
+      tiles.forEach((t) => {
+        const name = t.dataset.name ?? '';
+        const tech = t.dataset.tech ?? '';
+        const matchesText = !q || name.includes(q) || tech.includes(q);
+        const matchesTag = activeTag === 'all' || tech.split(',').includes(activeTag);
+        const show = matchesText && matchesTag;
+        t.classList.toggle('hidden', !show);
+        if (show) visible++;
+      });
+      noResults?.classList.toggle('hidden', visible !== 0);
+    };
+
+    search.addEventListener('input', apply);
+    chips.forEach((c) =>
+      c.addEventListener('click', () => {
+        activeTag = c.dataset.tag ?? 'all';
+        paint();
+        apply();
+      })
+    );
+  };
+
+  bind();
+  document.addEventListener('astro:after-swap', bind);
+</script>

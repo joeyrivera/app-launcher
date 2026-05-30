@@ -1,0 +1,39 @@
+---
+name: Lottery
+tagline: Lottery number analysis and draw tracking
+description: A full-stack app for tracking lottery draws and exploring number statistics, built with a Go/Gin API and a Next.js TypeScript frontend.
+repoUrl: https://github.com/joey1-rivera/lottery
+tech: ["Go", "Gin", "Next.js", "TypeScript", "MySQL"]
+accent: "#eab308"
+status: wip
+order: 4
+---
+
+import Diagram from '../../components/Diagram.astro';
+
+## What it is
+
+A full-stack project for tracking lottery draws and exploring number frequency
+and patterns over time. Not publicly hosted — it runs locally — but the design
+showcases a typed, modern full-stack setup.
+
+## How it's built
+
+A **Go / Gin** API serves draw data and computed statistics to a
+**Next.js (TypeScript)** frontend, with **MySQL** for storage. The Next.js app
+is tested with **Jest**.
+
+<Diagram code={`flowchart LR
+  C[Next.js + TypeScript] -->|REST| A[Go + Gin API]
+  A --> D[(MySQL)]`} />
+
+### Design decisions
+
+- **Gin** for a lightweight, fast HTTP layer over the analysis code.
+- **TypeScript end-to-end on the frontend** for confidence as the stats UI grew.
+- **Server-side stats** keep heavy number-crunching off the client.
+
+## What I learned
+
+Splitting computation (Go) from presentation (Next.js) kept each side simple and
+let me iterate on the analysis logic without touching the UI.

@@ -1,0 +1,22 @@
+---
+interface Props {
+  status: 'live' | 'wip' | 'archived';
+  hosted: boolean;
+}
+const { status, hosted } = Astro.props;
+
+const labels: Record<string, string> = {
+  live: 'Live',
+  wip: 'In progress',
+  archived: 'Archived',
+};
+const dot: Record<string, string> = {
+  live: 'bg-emerald-500',
+  wip: 'bg-amber-500',
+  archived: 'bg-slate-400',
+};
+---
+<span class="inline-flex items-center gap-1.5 rounded-full bg-black/5 px-2.5 py-1 text-xs font-medium text-slate-600 backdrop-blur dark:bg-white/10 dark:text-slate-200">
+  <span class={`h-1.5 w-1.5 rounded-full ${dot[status]}`}></span>
+  {hosted ? labels[status] : 'Not publicly hosted'}
+</span>

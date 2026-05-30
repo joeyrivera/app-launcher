@@ -1,0 +1,63 @@
+---
+import { ClientRouter } from 'astro:transitions';
+import ThemeToggle from '../components/ThemeToggle.astro';
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description?: string;
+  accent?: string;
+}
+
+const {
+  title,
+  description = 'A launcher and showcase for apps and websites built by Joey Rivera.',
+  accent,
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="en" style={accent ? `--page-accent:${accent}` : undefined}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <ClientRouter />
+    {/* Set theme before paint to avoid a flash of the wrong mode. */}
+    <script is:inline>
+      (() => {
+        const stored = localStorage.getItem('theme');
+        const dark = stored
+          ? stored === 'dark'
+          : window.matchMedia('(prefers-color-scheme: dark)').matches;
+        document.documentElement.classList.toggle('dark', dark);
+      })();
+    </script>
+  </head>
+  <body class="min-h-screen">
+    <header class="mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
+      <a
+        href="/"
+        class="font-display text-lg font-bold tracking-tight text-slate-900 transition hover:opacity-70 dark:text-white"
+      >
+        <span class="text-[var(--page-accent,#6366f1)]">▦</span> App Launcher
+      </a>
+      <ThemeToggle />
+    </header>
+
+    <main class="mx-auto max-w-6xl px-6 pb-24">
+      <slot />
+    </main>
+
+    <footer class="mx-auto max-w-6xl px-6 py-10 text-center text-sm text-slate-500 dark:text-slate-400">
+      Built by Joey Rivera · A showcase of things I've made
+    </footer>
+  </body>
+</html>

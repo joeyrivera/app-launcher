@@ -1,0 +1,43 @@
+---
+name: Forex Daemon
+tagline: Automated FX trading daemon with live metrics
+description: A Python daemon that connects to the OANDA API to run automated forex strategies, running as a system service with Grafana dashboards.
+tech: ["Python", "OANDA API", "Grafana", "systemd / launchd"]
+accent: "#a855f7"
+status: wip
+order: 5
+---
+
+import Diagram from '../../components/Diagram.astro';
+
+## What it is
+
+A long-running **Python** daemon that connects to the **OANDA** brokerage API to
+execute automated foreign-exchange strategies. It runs as a background service
+and reports what it's doing to a dashboard. Not publicly hosted — it runs on a
+private machine.
+
+## How it's built
+
+The daemon is managed by **launchd** (macOS) / **systemd** (Linux) so it starts
+on boot and restarts on failure. It polls market data and places orders through
+the **OANDA API**, emitting metrics to **Grafana** for monitoring.
+
+<Diagram code={`flowchart LR
+  O[OANDA API] <--> P[Python daemon]
+  P -->|metrics| G[Grafana]
+  SVC[launchd / systemd] -.supervises.-> P`} />
+
+### Design decisions
+
+- **Daemon over cron** so it can hold state and react to market data
+  continuously rather than on a fixed schedule.
+- **Broker API integration** with careful error handling — real money means
+  failures must fail safe.
+- **Grafana dashboards** to watch strategy behavior and PnL at a glance.
+
+## What I learned
+
+Anything touching real money raises the bar on reliability: idempotency,
+safe restarts, and observability stopped being nice-to-haves and became
+requirements.

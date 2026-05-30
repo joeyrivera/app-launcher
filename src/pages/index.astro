@@ -1,0 +1,50 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import TileGrid from '../components/TileGrid.astro';
+import AppTile from '../components/AppTile.astro';
+import FilterBar from '../components/FilterBar.astro';
+
+const apps = (await getCollection('apps')).sort((a, b) => {
+  // featured first, then explicit order, then name
+  if (a.data.featured !== b.data.featured) return a.data.featured ? -1 : 1;
+  const ao = a.data.order ?? Infinity;
+  const bo = b.data.order ?? Infinity;
+  if (ao !== bo) return ao - bo;
+  return a.data.name.localeCompare(b.data.name);
+});
+
+const tags = [...new Set(apps.flatMap((a) => a.data.tech))].sort();
+---
+
+<BaseLayout title="App Launcher — Joey Rivera">
+  <section class="mb-10 max-w-2xl animate-fade-up">
+    <h1 class="font-display text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl dark:text-white">
+      Things I've built
+    </h1>
+    <p class="mt-4 text-lg leading-relaxed text-slate-600 dark:text-slate-400">
+      A launcher for the apps and websites I've made over the years — for my
+      family to use, and to show how each one was built. Tap a tile to launch an
+      app, or open it to see what it is and how it works.
+    </p>
+  </section>
+
+  <FilterBar tags={tags} />
+
+  <TileGrid>
+    {
+      apps.map((app) => (
+        <AppTile
+          slug={app.slug}
+          name={app.data.name}
+          tagline={app.data.tagline}
+          tech={app.data.tech}
+          accent={app.data.accent}
+          status={app.data.status}
+          liveUrl={app.data.liveUrl}
+          screenshot={app.data.screenshot}
+        />
+      ))
+    }
+  </TileGrid>
+</BaseLayout>

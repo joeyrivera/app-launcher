@@ -1,0 +1,15 @@
+---
+// Responsive grid wrapper for the app tiles.
+---
+<div
+  id="tile-grid"
+  class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"
+>
+  <slot />
+</div>
+<p
+  id="no-results"
+  class="hidden py-16 text-center text-slate-500 dark:text-slate-400"
+>
+  No apps match your search.
+</p>

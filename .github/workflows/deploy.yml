@@ -1,0 +1,45 @@
+name: CI / Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  # Build in CI first so a broken build never reaches the server.
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+  # Deploy by SSHing into the Linode and rebuilding in place — same pattern
+  # as family-chat / forex. Nginx serves the built ./dist directly, so there's
+  # no process to restart (a static site needs no pm2/systemd).
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to Linode
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_KEY }}
+          script: |
+            set -e
+            cd /root/src/app-launcher
+            git pull origin main
+            npm ci
+            npm run build

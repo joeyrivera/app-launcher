@@ -1,0 +1,107 @@
+---
+import TechTag from './TechTag.astro';
+import StatusBadge from './StatusBadge.astro';
+
+interface Props {
+  slug: string;
+  name: string;
+  tagline: string;
+  tech: string[];
+  accent: string;
+  status: 'live' | 'wip' | 'archived';
+  liveUrl?: string;
+  screenshot?: string;
+}
+
+const { slug, name, tagline, tech, accent, status, liveUrl, screenshot } =
+  Astro.props;
+const href = `${import.meta.env.BASE_URL}apps/${slug}`.replace(/\/{2,}/g, '/');
+
+// Deterministic monogram: initials from the name.
+const initials = name
+  .split(/\s+/)
+  .map((w) => w[0])
+  .join('')
+  .slice(0, 2)
+  .toUpperCase();
+---
+<article
+  data-name={name.toLowerCase()}
+  data-tech={tech.join(',').toLowerCase()}
+  class="group relative flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl dark:border-slate-800 dark:bg-slate-900"
+  style={`--accent:${accent}`}
+>
+  {/* Accent glow on hover */}
+  <div
+    class="pointer-events-none absolute inset-0 opacity-0 transition duration-300 group-hover:opacity-100"
+    style="box-shadow: inset 0 0 0 1px var(--accent); border-radius: inherit;"
+  >
+  </div>
+
+  {/* Header: screenshot if present, else generated monogram gradient */}
+  <div
+    class="relative h-40 w-full overflow-hidden"
+    style={`background-image: linear-gradient(135deg, color-mix(in srgb, var(--accent) 85%, black) 0%, var(--accent) 100%)`}
+  >
+    {
+      screenshot ? (
+        <img
+          src={screenshot}
+          alt={`${name} screenshot`}
+          loading="lazy"
+          class="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+        />
+      ) : (
+        <div class="flex h-full w-full items-center justify-center">
+          <span class="font-display text-5xl font-bold tracking-tight text-white/90 transition duration-500 group-hover:scale-110">
+            {initials}
+          </span>
+        </div>
+      )
+    }
+    <div class="absolute left-3 top-3">
+      <StatusBadge status={status} hosted={!!liveUrl} />
+    </div>
+  </div>
+
+  {/* Body */}
+  <div class="flex flex-1 flex-col gap-3 p-5">
+    <h2 class="font-display text-xl font-bold tracking-tight text-slate-900 dark:text-white">
+      {name}
+    </h2>
+    <p class="flex-1 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
+      {tagline}
+    </p>
+    <div class="flex flex-wrap gap-1.5">
+      {tech.slice(0, 4).map((t) => <TechTag label={t} />)}
+    </div>
+
+    <div class="mt-2 flex items-center justify-between">
+      {/* Stretched link: whole card -> details */}
+      <a
+        href={href}
+        class="text-sm font-semibold text-slate-500 transition after:absolute after:inset-0 after:content-[''] group-hover:text-[var(--accent)] dark:text-slate-400"
+      >
+        View details →
+      </a>
+
+      {/* Launch sits above the stretched link */}
+      {
+        liveUrl && (
+          <a
+            href={liveUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="relative z-10 inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold text-white shadow-sm transition hover:brightness-110"
+            style="background-color: var(--accent)"
+          >
+            Launch
+            <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M14 5h5v5m0-5L10 14M5 9v10h10" />
+            </svg>
+          </a>
+        )
+      }
+    </div>
+  </div>
+</article>

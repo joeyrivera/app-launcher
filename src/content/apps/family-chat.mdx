@@ -1,0 +1,41 @@
+---
+name: Family Chat
+tagline: A private real-time chat for the whole family
+description: A self-hosted family messaging app with real-time chat and voice, so we have our own private space instead of relying on third-party apps.
+liveUrl: https://chat.myexperiments.app
+tech: ["Node.js", "Express", "React", "Vite", "Socket.io", "MySQL", "Twilio"]
+accent: "#3b82f6"
+status: live
+featured: true
+order: 2
+---
+
+import Diagram from '../../components/Diagram.astro';
+
+## What it is
+
+Family Chat is our own private messaging app — real-time text plus voice — so
+the family has a space we control rather than a third-party service.
+
+## How it's built
+
+A **Node.js / Express** server pairs with a **React (Vite)** client.
+**Socket.io** carries real-time messages over WebSockets, message history lives
+in **MySQL**, and **Twilio** powers voice calling.
+
+<Diagram code={`flowchart LR
+  C[React + Vite client] -->|WebSocket| S[Express + Socket.io]
+  S --> D[(MySQL)]
+  S -->|Voice| T[Twilio]`} />
+
+### Design decisions
+
+- **Socket.io** abstracts away reconnection and transport fallback so messages
+  feel instant and survive flaky connections.
+- **MySQL-backed history** means conversations persist and sync across devices.
+- **Twilio voice** adds calling without standing up our own telephony stack.
+
+## What I learned
+
+Real-time state is deceptively hard — getting presence, ordering, and
+reconnection right took more care than the initial chat happy-path.
