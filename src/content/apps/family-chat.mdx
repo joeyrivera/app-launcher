@@ -1,10 +1,10 @@
 ---
 name: Family Chat
-tagline: A private real-time chat for the whole family
-description: A self-hosted family messaging app with real-time chat and voice, so we have our own private space instead of relying on third-party apps.
+tagline: A private real-time chat — with self-hosted video calls
+description: A self-hosted family messaging app with real-time chat, reactions, presence, and peer-to-peer WebRTC video/voice calling — so we have our own private space instead of relying on third-party apps.
 liveUrl: https://chat.myexperiments.app
 screenshot: /screenshots/family-chat.jpg
-tech: ["Node.js", "Express", "React", "Vite", "Socket.io", "MySQL", "Twilio"]
+tech: ["Node.js", "Express", "Socket.io", "WebRTC", "React", "Vite", "MySQL", "JWT", "Twilio", "PM2"]
 accent: "#3b82f6"
 status: live
 featured: true
@@ -15,40 +15,68 @@ import Diagram from '../../components/Diagram.astro';
 
 ## What it is
 
-Family Chat is our own private messaging app — real-time text plus voice — so
-the family has a space we control rather than a third-party service.
+Family Chat is our own private messaging app — real-time text with reactions and
+presence, plus **peer-to-peer video and voice calls** — so the family has a
+space we control rather than a third-party service.
 
-## How it's built
+## Architecture
 
-A **Node.js / Express** server pairs with a **React (Vite)** client.
-**Socket.io** carries real-time messages over WebSockets, message history lives
-in **MySQL**, and **Twilio** powers voice calling.
+A **Node.js / Express** server pairs with a **React (Vite)** client. The split
+is deliberate: **REST** handles authenticated operations (login, message
+history, uploads, admin), while **Socket.io (WebSockets)** carries everything
+live — new messages, typing indicators, reactions, presence, and the signaling
+for calls. History persists in **MySQL**.
 
 <Diagram
-  caption="Real-time over WebSockets; Twilio for voice"
+  caption="REST for stateful ops, WebSockets for everything live"
   nodes={[
     { label: "React + Vite", kind: "external" },
-    { label: "Express + Socket.io", sub: "WebSocket", kind: "service" },
+    { label: "Express", sub: "REST + Socket.io", kind: "service" },
     { label: "MySQL", kind: "store" },
   ]}
 />
 
-<Diagram
-  caption="Voice path"
-  nodes={[
-    { label: "Express server", kind: "service" },
-    { label: "Twilio", sub: "voice", kind: "external" },
-  ]}
-/>
+## Real-time design
 
-### Design decisions
+- **Reliable ordering & catch-up** — messages are the source of truth in MySQL;
+  Socket.io events are optimistic updates. On reconnect the client requests
+  everything `after` its last seen message id, so nothing is missed during a
+  drop.
+- **Presence & typing** — tracked in-memory per socket and broadcast live;
+  typing indicators auto-expire so they never get stuck.
+- **Reactions** — an atomic toggle backed by a `UNIQUE(message, user, emoji)`
+  constraint, so the database enforces one reaction per user per emoji.
 
-- **Socket.io** abstracts away reconnection and transport fallback so messages
-  feel instant and survive flaky connections.
-- **MySQL-backed history** means conversations persist and sync across devices.
-- **Twilio voice** adds calling without standing up our own telephony stack.
+## Engineering highlights
+
+- **Self-hosted WebRTC calls** — video/voice run peer-to-peer; the server only
+  relays SDP offers/answers and ICE candidates over Socket.io and never touches
+  the media stream (so it's end-to-end encrypted by WebRTC default). No Twilio
+  Video, Zoom, or per-minute cost — and a clean call state machine handles
+  request / accept / decline / end and disconnect cleanup. Twilio is used for
+  PSTN voice dialing where a real phone number is needed.
+- **Session invalidation done right** — JWTs carry a `token_version`; bumping it
+  server-side instantly invalidates every outstanding token (a real
+  "log out everywhere"), without a session table.
+- **Version-aware client** — the server broadcasts its running version and start
+  time; the client prompts a refresh when it detects a redeploy, so nobody runs
+  stale code against new APIs.
+- **Browser-based admin** — family accounts, password resets, and ntfy push
+  settings are managed from an in-app admin panel, all guarded server-side.
+- **Tested & mocked** — server routes and the full WebRTC signaling flow are
+  covered with Jest + supertest (DB mocked); client utilities with Vitest. Tests
+  gate the deploy.
+
+## Infrastructure & delivery
+
+The client builds into the server's static dir; **PM2** keeps the Node process
+alive and restarts it on deploy. **GitHub Actions** runs both test suites, then
+SSHes in to pull, build, run idempotent migrations, and `pm2 restart`. nginx
+reverse-proxies with WebSocket upgrade headers; TLS via Let's Encrypt.
 
 ## What I learned
 
-Real-time state is deceptively hard — getting presence, ordering, and
-reconnection right took more care than the initial chat happy-path.
+Real-time state is deceptively hard — presence, ordering, and reconnection took
+far more care than the initial happy-path chat. Building the video calls on raw
+WebRTC instead of a paid SDK was the most satisfying part: more work up front,
+but no vendor, no cost, and full control over the experience.

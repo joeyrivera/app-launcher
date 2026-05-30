@@ -1,9 +1,8 @@
 ---
-name: Lottery
-tagline: Lottery number analysis and draw tracking
-description: A full-stack app for tracking lottery draws and exploring number statistics, built with a Go/Gin API and a Next.js TypeScript frontend.
-repoUrl: https://github.com/joey1-rivera/lottery
-tech: ["Go", "Gin", "Next.js", "TypeScript", "MySQL"]
+name: Lottery Pools
+tagline: Group lottery pools with payments and OCR ticket import
+description: A full-stack platform for running group lottery pools — fractional contributions, Stripe payments, OCR import of physical tickets, and per-participant ownership analytics.
+tech: ["Go", "Gin", "GORM", "Next.js", "TypeScript", "MySQL", "Stripe", "Google Vision OCR", "JWT"]
 accent: "#eab308"
 status: wip
 order: 4
@@ -13,32 +12,53 @@ import Diagram from '../../components/Diagram.astro';
 
 ## What it is
 
-A full-stack project for tracking lottery draws and exploring number frequency
-and patterns over time. Not publicly hosted — it runs locally — but the design
-showcases a typed, modern full-stack setup.
+A platform for running **group lottery pools**: people join a pool, contribute
+money, and own a fractional share of the tickets the pool buys. It tracks
+contributions, computes each participant's ownership percentage, handles
+payments and refunds, and can even import **physical paper tickets** by scanning
+them. Not publicly hosted — it runs locally — but it's the most feature-complete
+full-stack project in this set.
 
-## How it's built
+## Architecture
 
-A **Go / Gin** API serves draw data and computed statistics to a
-**Next.js (TypeScript)** frontend, with **MySQL** for storage. The Next.js app
-is tested with **Jest**.
+A **Go + Gin** API (versioned `/api/v1`) with **GORM** over **MySQL** in
+production and **SQLite** in tests, paired with a **Next.js 15 (App Router)** +
+**React 19 + TypeScript** frontend. Auth is **JWT**; a centralized Axios client
+attaches the token and redirects on `401`.
 
 <Diagram
-  caption="Typed frontend, computed stats server-side"
+  caption="Typed full-stack with external payment + OCR services"
   nodes={[
     { label: "Next.js + TS", kind: "external" },
-    { label: "Go + Gin API", sub: "REST", kind: "service" },
-    { label: "MySQL", kind: "store" },
+    { label: "Go + Gin API", sub: "/api/v1", kind: "service" },
+    { label: "MySQL", sub: "GORM", kind: "store" },
   ]}
 />
 
-### Design decisions
+## Engineering highlights
 
-- **Gin** for a lightweight, fast HTTP layer over the analysis code.
-- **TypeScript end-to-end on the frontend** for confidence as the stats UI grew.
-- **Server-side stats** keep heavy number-crunching off the client.
+- **Payment-provider abstraction** — Stripe's **PaymentIntent** flow (SCA / 3-D
+  Secure ready) sits behind a `PaymentProvider` interface with a mock
+  implementation, so the whole contribution → payment → confirmation workflow is
+  testable without hitting Stripe.
+- **OCR with a human in the loop** — physical tickets are scanned via **Google
+  Cloud Vision**, extracting serial numbers, barcodes, draw dates, and the
+  numbers on multi-line plays with confidence scores. Extracted data is returned
+  for review before it's saved — never blindly trusted.
+- **Pool economics** — fractional ticket shares, configurable contribution
+  deadlines and refund windows, platform-fee accounting, and a clear pool
+  lifecycle state machine (active → closed → completed/cancelled).
+- **Transactional integrity** — multi-step operations (payment + ticket writes)
+  are wrapped in GORM transactions that roll back as a unit, so a failure never
+  leaves a pool in a half-updated state.
+- **End-to-end type safety** — Go structs mirror TypeScript interfaces, with Zod
+  validating forms on the client and matching the server's rules.
+- **Tested both sides** — service layer covered with testify + sqlmock (the same
+  models run against SQLite in tests); React flows with Jest + Testing Library.
 
 ## What I learned
 
-Splitting computation (Go) from presentation (Next.js) kept each side simple and
-let me iterate on the analysis logic without touching the UI.
+Splitting thin HTTP handlers from a service layer kept the payment, OCR, and
+pool-economics logic independently testable — which mattered a lot once real
+money (Stripe) and unreliable input (OCR) entered the picture and "mostly works"
+stopped being good enough.

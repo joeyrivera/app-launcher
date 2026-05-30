@@ -1,8 +1,8 @@
 ---
 name: Forex Daemon
-tagline: Automated FX trading daemon with live metrics
-description: A Python daemon that connects to the OANDA API to run automated forex strategies, running as a system service with Grafana dashboards.
-tech: ["Python", "OANDA API", "Grafana", "systemd / launchd"]
+tagline: A streaming, self-supervising FX trading daemon
+description: A dependency-light Python daemon that trades FX strategies against the OANDA API over persistent WebSocket streams, with real-time risk management, layered safety gates, and a custom Prometheus/Grafana observability stack.
+tech: ["Python", "OANDA API", "WebSockets", "Prometheus", "Grafana", "systemd", "launchd", "pytest"]
 accent: "#a855f7"
 status: wip
 order: 5
@@ -12,36 +12,66 @@ import Diagram from '../../components/Diagram.astro';
 
 ## What it is
 
-A long-running **Python** daemon that connects to the **OANDA** brokerage API to
-execute automated foreign-exchange strategies. It runs as a background service
-and reports what it's doing to a dashboard. Not publicly hosted — it runs on a
-private machine.
+A long-running **Python** daemon that runs automated foreign-exchange strategies
+against the **OANDA** API. It scans for setups on a fixed candle cycle, sizes and
+places trades under strict risk rules, and manages open positions in real time.
+Not publicly hosted — it runs as a background service on a private machine — but
+it's the most operationally involved project here.
 
-## How it's built
+## Architecture
 
-The daemon is managed by **launchd** (macOS) / **systemd** (Linux) so it starts
-on boot and restarts on failure. It polls market data and places orders through
-the **OANDA API**, emitting metrics to **Grafana** for monitoring.
+The daemon holds **persistent WebSocket connections** rather than polling on a
+cron: one shared pricing stream and a per-account transaction stream. A handful
+of cooperating threads — a scheduler, a price/transaction event manager, and a
+state flusher — share a single lock-guarded state object. The whole core is
+written with the **Python standard library only** (no pandas/numpy/requests);
+even the indicators are computed by hand.
 
 <Diagram
-  caption="Long-running daemon, supervised by the OS, observed in Grafana"
+  caption="Streaming-first: react to ticks in real time, export metrics for Grafana"
   nodes={[
-    { label: "OANDA API", kind: "external" },
-    { label: "Python daemon", sub: "launchd / systemd", kind: "service" },
-    { label: "Grafana", sub: "metrics", kind: "external" },
+    { label: "OANDA API", sub: "WebSocket streams", kind: "external" },
+    { label: "Daemon", sub: "threads + state", kind: "service" },
+    { label: "metrics server", sub: "Prometheus", kind: "service" },
+    { label: "Grafana", kind: "external" },
   ]}
 />
 
-### Design decisions
+## Engineering highlights
 
-- **Daemon over cron** so it can hold state and react to market data
-  continuously rather than on a fixed schedule.
-- **Broker API integration** with careful error handling — real money means
-  failures must fail safe.
-- **Grafana dashboards** to watch strategy behavior and PnL at a glance.
+- **Streaming-first design** — reacting to live ticks (rather than scheduled
+  polling) lets it manage positions at sub-second latency: when a trade reaches
+  its first risk target, a manager thread automatically closes part of the
+  position and moves the stop to breakeven.
+- **Layered risk gates** — each independently configurable and measured: a
+  drawdown circuit breaker, a consecutive-loss cooldown, ATR-based position
+  sizing to a fixed risk fraction, and trend/momentum filters that can veto a
+  signal.
+- **Multi-account orchestration** — one daemon manages several accounts at once,
+  sharing the data pipeline but keeping separate configs and risk state per
+  account.
+- **Resilience by construction** — graceful `SIGTERM` shutdown that flushes
+  state, infinite stream reconnect loops, and a supervisor that respawns the
+  manager thread if it dies. OANDA is treated as the source of truth, so a
+  restart simply re-reads open trades and resumes.
+- **Custom observability** — a hand-rolled Prometheus exporter (no client
+  library) serves live account/trade gauges plus file-backed counters the daemon
+  writes every few minutes, all visualized in a Grafana dashboard.
+- **Tested and validated** — 200+ pytest cases cover the indicators, sizing,
+  scheduling, streams, and end-to-end daemon behavior, and a walk-forward
+  backtesting framework checks strategies against held-out data to guard against
+  overfitting.
+
+## Process supervision
+
+Runs under **systemd** on Linux (with a companion metrics service and a weekly
+"retro" analysis timer) and **launchd** on macOS for development — auto-starting
+on boot and restarting on failure.
 
 ## What I learned
 
-Anything touching real money raises the bar on reliability: idempotency,
-safe restarts, and observability stopped being nice-to-haves and became
-requirements.
+Anything touching real money raises the bar on reliability: idempotency, safe
+restarts, and observability stopped being nice-to-haves and became requirements.
+Moving from cron-scheduled scripts to a streaming daemon was the turning point —
+it made real-time position management possible and the whole system far easier
+to reason about.

@@ -1,10 +1,10 @@
 ---
 name: D2R Inventory Image
 tagline: Auto-generated Diablo II item showcase images
-description: A Go service that turns a spreadsheet of Diablo II Resurrected items into shareable inventory images, with metrics piped to Grafana.
+description: A dependency-light Go service that renders a spreadsheet of Diablo II Resurrected items into a shareable inventory PNG on the fly, instrumented with Prometheus metrics.
 liveUrl: https://d2r.myexperiments.app/images/azeroti.png
 screenshot: /screenshots/d2r-inventory-image.png
-tech: ["Go", "Google Sheets API", "Grafana Cloud"]
+tech: ["Go", "Gin", "image/draw", "Prometheus", "Grafana", "Google Sheets"]
 accent: "#ef4444"
 status: live
 order: 3
@@ -20,36 +20,44 @@ handy for showing off finds in trade communities.
 
 ## How it's built
 
-A **Go** service pulls item data from the **Google Sheets API**, composites the
-item art and stats into a PNG on the fly, and serves it over HTTP. Operational
-metrics ship to **Grafana Cloud**.
+A small **Go** service (Gin for routing) composites the image **from first
+principles using only the standard library** — no ImageMagick, no headless
+browser. It draws a sprite sheet onto a canvas with `image/draw`, renders the
+item rows with a bitmap font from `golang.org/x/image/font`, and encodes the
+result with `image/png`.
 
 <Diagram
-  caption="Sheet as the source of truth; metrics to Grafana"
+  caption="A published Sheet is the CMS; the service renders + serves the PNG"
   nodes={[
-    { label: "Google Sheet", kind: "store" },
-    { label: "Go image service", sub: "composites PNG", kind: "service" },
+    { label: "Google Sheet", sub: "published CSV", kind: "store" },
+    { label: "Go service", sub: "image/draw", kind: "service" },
     { label: "Browser / share", kind: "external" },
   ]}
 />
 
-<Diagram
-  caption="Observability"
-  nodes={[
-    { label: "Go image service", kind: "service" },
-    { label: "Grafana Cloud", sub: "metrics", kind: "external" },
-  ]}
-/>
+## Engineering highlights
 
-### Design decisions
+- **Spreadsheet as a CMS** — the source of truth is a Google Sheet published as
+  CSV, fetched over plain HTTP with no API keys or service accounts. Anyone
+  non-technical can update the item list with zero deploy.
+- **Dynamic canvas sizing** — the image width is computed from the longest row
+  and the height from the row count, so output never clips or hardcodes
+  dimensions.
+- **Stateless rendering** — each regeneration is a full, deterministic redraw
+  cached to disk; no incremental-update bugs, and the service can be restarted
+  or scaled freely.
+- **Observability from day one** — Prometheus counters and latency histograms
+  (image generation, CSV fetch) are exposed at `/metrics`, scraped by Grafana
+  Alloy into Grafana Cloud dashboards for request volume, errors, and timing.
 
-- **Sheets as the database** — non-technical edits to the item list need no
-  deploy; the source of truth is a spreadsheet anyone can update.
-- **On-the-fly image compositing** in Go keeps the service stateless and the
-  output always fresh.
-- **Grafana metrics** make a hobby service observable, just like a production one.
+## Infrastructure
+
+Served behind nginx with Let's Encrypt TLS; metrics scraped by a Grafana Alloy
+agent. The whole thing is a single lightweight Go binary with a tiny footprint.
 
 ## What I learned
 
 Treating Google Sheets as a lightweight CMS is a surprisingly pragmatic pattern
-for small projects where the content owner isn't a developer.
+for small projects where the content owner isn't a developer — and writing the
+image compositor by hand was a good reminder of how much you can do with Go's
+standard library alone.

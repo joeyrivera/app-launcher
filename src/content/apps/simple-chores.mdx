@@ -1,10 +1,10 @@
 ---
 name: Simple Chores
 tagline: Family chore tracking that kids actually use
-description: A web app for assigning, tracking, and rewarding household chores. Kids check off tasks, parents approve them, and points add up toward rewards.
+description: A multi-tenant web app for assigning, approving, and rewarding household chores — with a points economy, achievements, and an avatar shop to keep kids engaged.
 liveUrl: https://simplechores.joeyrivera.com
 screenshot: /screenshots/simple-chores.jpg
-tech: ["Go", "React", "MySQL", "Docker", "Kubernetes"]
+tech: ["Go", "Gin", "GORM", "React", "TypeScript", "Vite", "Tailwind CSS", "MySQL", "JWT", "Docker", "Kubernetes", "Prometheus"]
 accent: "#22c55e"
 status: live
 featured: true
@@ -15,40 +15,71 @@ import Diagram from '../../components/Diagram.astro';
 
 ## What it is
 
-Simple Chores keeps our household running without the nagging. Each kid has a
-list of chores; they tap to mark a chore done, a parent approves it, and points
-accumulate toward rewards they pick. It's deliberately simple — large tap
-targets, no clutter — so even the youngest can use it on a tablet.
+Simple Chores keeps our household running without the nagging. Each kid sees
+their assigned and optional chores, taps to mark one done, a parent approves it,
+and points accumulate toward rewards. A gamification layer — achievements, a
+points economy, and an avatar shop — keeps the kids coming back. It's built for
+real daily use by both adults and young children on the same account.
 
-## How it's built
+## Architecture
 
-A **Go** REST API backs a **React** single-page app. Chore definitions,
-assignments, completions, and point balances live in **MySQL**. The whole thing
-is containerized with **Docker** and runs on a **Kubernetes** cluster behind an
-ingress with automatic TLS.
+A **Go + Gin** REST API backs a **React 19 + TypeScript** single-page app built
+with **Vite** and **Tailwind**. Data is modeled with **GORM** over **MySQL**.
+Auth is **JWT**; every request is scoped to a family, so the data model is
+genuinely multi-tenant rather than single-household.
 
 <Diagram
-  caption="Kubernetes-hosted, TLS at the edge"
+  caption="JWT-authenticated SPA over a family-scoped Go API, on Kubernetes"
   nodes={[
     { label: "Kids & Parents", kind: "external" },
-    { label: "Ingress", sub: "TLS" },
-    { label: "React SPA" },
-    { label: "Go API", sub: "REST/JSON", kind: "service" },
-    { label: "MySQL", kind: "store" },
+    { label: "Ingress", sub: "TLS / cert-manager" },
+    { label: "React SPA", sub: "Vite + TS" },
+    { label: "Go + Gin API", sub: "JWT", kind: "service" },
+    { label: "MySQL", sub: "GORM", kind: "store" },
   ]}
 />
 
-### Design decisions
+## Data & domain model
 
-- **Go API** for a small, fast, statically-compiled binary that's trivial to
-  containerize and cheap to run.
-- **Approval workflow** — completions aren't trusted blindly; a parent approves
-  before points are awarded, which keeps the incentive honest.
-- **Points → rewards** modeled as a simple ledger so balances are always the sum
-  of approved completions minus redemptions.
+- **Family → Users** (parent/child roles), **Chores**, and **ChoreAssignments**
+  with flexible (cron-like) scheduling.
+- A **PointLedger** modeled as **double-entry bookkeeping**: every earn, spend,
+  and adjustment is an immutable entry, so a balance is always the sum of its
+  history and can't drift from concurrent updates.
+- An **Achievement** engine covering six types (points, streaks, daily/weekly
+  completions, optional-chore counts, lifetime totals) with progress tracking
+  and claimable rewards.
+- An **avatar shop** where earned points buy cosmetic items.
+
+## Engineering highlights
+
+- **Family-scoped multi-tenancy** — the JWT carries the family id, middleware
+  rejects any request whose path doesn't match it, and every query is filtered
+  by family. Isolation holds even if a handler has a bug.
+- **Multi-pod-safe migrations** — a custom runner takes a database-backed lock
+  with stale-lock detection, so when replicas start at once exactly one applies
+  migrations and the rest proceed safely.
+- **Per-tenant observability** — Prometheus metrics (request counts + latency
+  histograms) labeled by route, status, and family id, scraped into dashboards.
+- **An in-app AI assistant** — an Anthropic Claude integration with tool use
+  that can read assignments and help manage chores conversationally.
+- **Layered, testable design** — thin Gin handlers over an interface-based
+  service layer; tested with testify + sqlmock on the Go side and Jest + React
+  Testing Library on the UI, gated in CI.
+
+## Infrastructure & delivery
+
+Multi-stage **Docker** builds (static Go binary on Alpine; Vite build served by
+Node) run on a **Kubernetes** cluster behind an nginx ingress, with TLS issued
+by **cert-manager**. Secrets are committed as encrypted **Sealed Secrets** for a
+clean GitOps workflow. **GitHub Actions** runs the Go + React test suites as a
+required gate, then builds and pushes images (tagged by semver *and* commit SHA)
+and triggers a zero-downtime rolling update (`maxUnavailable: 0` + readiness
+probes).
 
 ## What I learned
 
-Building for kids forces real UX discipline: anything ambiguous gets misused.
-The approval step started as an afterthought and became the feature that made
-the whole system trustworthy for the family.
+Building for kids forces real UX discipline — anything ambiguous gets misused.
+The approval step and the double-entry ledger started as small details and
+became the things that made the whole system trustworthy enough for the family
+to rely on every day.
