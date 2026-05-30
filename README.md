@@ -65,7 +65,7 @@ Adding an app is **one file** — no layout changes:
 
 ## Deployment
 
-Self-hosted on the same Linode as `family-chat` / `forex`, served as static
+Self-hosted on a small VPS alongside `family-chat` / `forex`, served as static
 files by nginx (no app process — a static site needs no pm2/systemd).
 
 Pushing to `main` triggers `.github/workflows/deploy.yml`: it builds in CI to

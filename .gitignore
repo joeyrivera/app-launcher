@@ -11,5 +11,7 @@ npm-debug.log*
 .env.production
 # macOS
 .DS_Store
-# local Claude Code config (permissions, etc.)
+# local Claude Code config — kept out of this public repo on purpose
+# (Claude reads these from disk regardless of git tracking)
 .claude/
+CLAUDE.md

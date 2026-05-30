@@ -24,14 +24,14 @@ jobs:
       - name: Build
         run: npm run build
 
-  # Deploy by SSHing into the Linode and rebuilding in place — same pattern
+  # Deploy by SSHing into the server and rebuilding in place — same pattern
   # as family-chat / forex. Nginx serves the built ./dist directly, so there's
   # no process to restart (a static site needs no pm2/systemd).
   deploy:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy to Linode
+      - name: Deploy to server
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.DEPLOY_HOST }}
