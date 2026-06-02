@@ -29,16 +29,23 @@ Adding an app is **one file** — no layout changes:
    name: My App                       # required
    tagline: One-line pitch            # required
    description: A sentence for SEO    # required
-   liveUrl: https://example.com       # optional — omit -> "Not publicly hosted"
+   liveUrl: https://example.com       # optional — absolute URL, or a root-relative
+                                      #   /play/<slug>.html for a self-hosted asset;
+                                      #   omit -> "Not publicly hosted"
    repoUrl: https://github.com/...    # optional
    tech: ["Go", "React", "MySQL"]     # stack tags (also used by the filter)
-   screenshot: /apps/my-app.png       # optional — else a monogram tile is generated
+   screenshot: /screenshots/my-app.jpg # optional — else a monogram tile is generated
    accent: "#22c55e"                  # tile/page accent color
    status: live                       # live | wip | archived
    featured: true                     # optional — sorts to the front
    order: 1                           # optional — manual sort
+   section: mine                      # optional — mine (default) | kids
    ---
    ```
+
+   To host a self-contained single-file app on this site (instead of linking
+   out), drop it at `public/play/<slug>.html` and set `liveUrl:
+   /play/<slug>.html`.
 
 3. Below the frontmatter, write the detail page in Markdown/MDX. For an
    architecture diagram, import and use the `Diagram` component:
@@ -46,9 +53,18 @@ Adding an app is **one file** — no layout changes:
    ```mdx
    import Diagram from '../../components/Diagram.astro';
 
-   <Diagram code={`flowchart LR
-     A[Client] --> B[API] --> C[(DB)]`} />
+   <Diagram
+     caption="Client through API to the database"
+     nodes={[
+       { label: "Client", kind: "external" },
+       { label: "API", kind: "service" },
+       { label: "Database", kind: "store" },
+     ]}
+   />
    ```
+
+   (Diagrams are pure HTML/CSS boxes-and-arrows via the `nodes` prop — there's
+   no mermaid or client-side diagram engine.)
 
 4. Add an optional screenshot. For apps with a public `liveUrl`, capture one
    automatically (Playwright is not a project dependency — install on demand):
