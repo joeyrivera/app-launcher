@@ -1,0 +1,64 @@
+---
+name: The Reading Nook
+tagline: A cozy personal-library tracker — shelve, rate, lend, and even scan your books — built by another of my kids
+description: A warm, single-page library app for keeping track of the books you own, want, and have read. Track reading status and ratings, set a yearly goal and streak, manage who you've lent books to, and add a book just by photographing its cover. Made by one of my kids with Claude.
+liveUrl: https://claude.ai/public/artifacts/f9786e2b-4ce3-4539-88aa-f6b8f5abcf87
+screenshot: /screenshots/reading-nook.jpg
+tech: ["React", "Babel", "Tailwind CSS", "Claude API", "Open Library API", "localStorage"]
+accent: "#B5685E"
+status: live
+featured: false
+order: 2
+section: kids
+---
+
+import Diagram from '../../components/Diagram.astro';
+
+## What it is
+
+*The Reading Nook* is a cozy little app for keeping track of your books —
+another build from my kids, made by describing what they wanted to Claude and
+shaping it from there. It's a personal bookshelf: every book has a cover,
+author, series, format (physical or Kindle), tags, a star rating, and a status
+— *want to read*, *reading*, or *read*. You can search and filter the shelf,
+group books by series, and see your reading at a glance: a **yearly goal**, a
+**reading streak**, and stats on what you've finished.
+
+It goes a step further than a plain list, with two genuinely useful touches:
+
+- **A lending tracker** — mark a book as lent to someone (with the date and
+  when it's due back), or log a book you've *borrowed*, and the app reminds you
+  what's out and what's coming due.
+- **Scan a book to add it** — point your phone camera at a cover and the app
+  identifies the book and drops it onto your shelf, no typing required.
+
+## How it's built
+
+Like the other kid app here, it's a **single self-contained HTML file** with no
+build step. It's a **React 18** single-page app whose JSX is compiled **in the
+browser** by **Babel Standalone**, styled with **Tailwind** (both loaded from a
+CDN). All your data lives in the browser via **`localStorage`** — books, goal,
+streak, and lending records — so there's no account and no server, and there's
+a backup/restore option to move it between devices.
+
+The two clever features lean on outside help. The **scan** feature sends the
+cover photo to **Claude (Sonnet 4)**, which reads the title and author and
+returns them as clean JSON; the app then asks the **Open Library** API for a
+matching cover image. (The Claude key is the user's own, stored only in their
+browser — each scan costs about half a cent.)
+
+<Diagram
+  caption="Scan a cover → Claude reads it → Open Library finds the art → it lands on your shelf"
+  nodes={[
+    { label: "Book cover", sub: "phone camera", kind: "external" },
+    { label: "Claude Sonnet 4", sub: "vision → JSON", kind: "service" },
+    { label: "Open Library", sub: "cover image", kind: "service" },
+    { label: "Your shelf", sub: "saved in-browser", kind: "store" },
+  ]}
+/>
+
+## Why it's here
+
+This launcher showcases what our family builds — and the kids are part of that.
+*The Reading Nook* is the second of theirs: a real, daily-useful little app,
+polished down to the cozy details. More to come.
