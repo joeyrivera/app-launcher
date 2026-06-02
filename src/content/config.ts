@@ -11,7 +11,14 @@ const apps = defineCollection({
     description: z.string(),
     // Optional: when absent the tile shows a "Not publicly hosted" badge
     // instead of a Launch button (e.g. forex daemon, lottery).
-    liveUrl: z.string().url().optional(),
+    // Either an absolute URL to an externally-hosted app, OR a root-relative
+    // path (e.g. /play/foo.html) for an app we ship as a static asset in
+    // public/ and serve from this same site.
+    liveUrl: z
+      .string()
+      .url()
+      .or(z.string().regex(/^\//, 'must be an absolute URL or a root-relative path'))
+      .optional(),
     repoUrl: z.string().url().optional(),
     tech: z.array(z.string()).default([]),
     // Optional hero image; falls back to a generated monogram tile.

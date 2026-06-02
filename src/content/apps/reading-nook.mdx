@@ -2,7 +2,7 @@
 name: The Reading Nook
 tagline: A cozy personal-library tracker — shelve, rate, lend, and even scan your books — built by another of my kids
 description: A warm, single-page library app for keeping track of the books you own, want, and have read. Track reading status and ratings, set a yearly goal and streak, manage who you've lent books to, and add a book just by photographing its cover. Made by one of my kids with Claude.
-liveUrl: https://claude.ai/public/artifacts/f9786e2b-4ce3-4539-88aa-f6b8f5abcf87
+liveUrl: /play/reading-nook.html
 screenshot: /screenshots/reading-nook.jpg
 tech: ["React", "Babel", "Tailwind CSS", "Claude API", "Open Library API", "localStorage"]
 accent: "#B5685E"
@@ -39,7 +39,9 @@ build step. It's a **React 18** single-page app whose JSX is compiled **in the
 browser** by **Babel Standalone**, styled with **Tailwind** (both loaded from a
 CDN). All your data lives in the browser via **`localStorage`** — books, goal,
 streak, and lending records — so there's no account and no server, and there's
-a backup/restore option to move it between devices.
+a backup/restore option to move it between devices. Because the whole app is one
+file, this launcher just serves it directly as a static asset — the same way the
+rest of the site is hosted.
 
 The two clever features lean on outside help. The **scan** feature sends the
 cover photo to **Claude (Sonnet 4)**, which reads the title and author and

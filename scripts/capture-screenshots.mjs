@@ -34,6 +34,11 @@ const targets = readdirSync(appsDir)
 
 const isImage = (url) => /\.(png|jpe?g|gif|webp|svg)(\?.*)?$/i.test(url);
 
+// A root-relative liveUrl (e.g. /play/foo.html) is an app we self-host as a
+// static asset; resolve it against the live site so Playwright can navigate.
+const SITE = 'https://apps.myexperiments.app';
+const resolveUrl = (url) => (url.startsWith('/') ? SITE + url : url);
+
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
 
@@ -48,7 +53,7 @@ for (const { slug, liveUrl } of targets) {
       writeFileSync(out, buf);
       console.log(`✓ ${slug} -> /screenshots/${slug}.${ext} (fetched image)`);
     } else {
-      await page.goto(liveUrl, { waitUntil: 'networkidle', timeout: 30000 });
+      await page.goto(resolveUrl(liveUrl), { waitUntil: 'networkidle', timeout: 30000 });
       await page.waitForTimeout(1500); // let fonts/animations settle
       const out = join(outDir, `${slug}.jpg`);
       await page.screenshot({ path: out, type: 'jpeg', quality: 82 });
