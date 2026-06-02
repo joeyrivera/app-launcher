@@ -5,15 +5,20 @@ import TileGrid from '../components/TileGrid.astro';
 import AppTile from '../components/AppTile.astro';
 import FilterBar from '../components/FilterBar.astro';
 
-const apps = (await getCollection('apps')).sort((a, b) => {
+const byRank = (a, b) => {
   // featured first, then explicit order, then name
   if (a.data.featured !== b.data.featured) return a.data.featured ? -1 : 1;
   const ao = a.data.order ?? Infinity;
   const bo = b.data.order ?? Infinity;
   if (ao !== bo) return ao - bo;
   return a.data.name.localeCompare(b.data.name);
-});
+};
 
+const all = await getCollection('apps');
+const apps = all.filter((a) => a.data.section !== 'kids').sort(byRank);
+const kidsApps = all.filter((a) => a.data.section === 'kids').sort(byRank);
+
+// Filter chips reflect only my apps — the section the search/filter acts on.
 const tags = [...new Set(apps.flatMap((a) => a.data.tech))].sort();
 ---
 
@@ -47,4 +52,35 @@ const tags = [...new Set(apps.flatMap((a) => a.data.tech))].sort();
       ))
     }
   </TileGrid>
+
+  {
+    kidsApps.length > 0 && (
+      <section class="mt-20 border-t border-slate-200 pt-12 dark:border-slate-800">
+        <div class="mb-8 max-w-2xl">
+          <h2 class="font-display text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl dark:text-white">
+            My kids' apps
+          </h2>
+          <p class="mt-3 text-lg leading-relaxed text-slate-600 dark:text-slate-400">
+            Things my kids have built. Same idea — tap a tile to play, or open it
+            to see what it is and how it works.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {kidsApps.map((app) => (
+            <AppTile
+              slug={app.slug}
+              name={app.data.name}
+              tagline={app.data.tagline}
+              tech={app.data.tech}
+              accent={app.data.accent}
+              status={app.data.status}
+              liveUrl={app.data.liveUrl}
+              screenshot={app.data.screenshot}
+            />
+          ))}
+        </div>
+      </section>
+    )
+  }
 </BaseLayout>

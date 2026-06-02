@@ -22,6 +22,9 @@ const apps = defineCollection({
     status: z.enum(['live', 'wip', 'archived']).default('wip'),
     featured: z.boolean().default(false),
     order: z.number().optional(),
+    // Which grid the app belongs to: the owner's apps ("mine", default) or
+    // the "My kids' apps" section at the bottom.
+    section: z.enum(['mine', 'kids']).default('mine'),
   }),
 });
 

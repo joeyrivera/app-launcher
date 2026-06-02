@@ -1,0 +1,60 @@
+---
+name: Mochi's Garden
+tagline: A cozy cat platformer my youngest dreamed up and built with Claude
+description: A hand-built 2D platformer where Mochi the cat crosses six little dream-worlds — gathering balls of yarn and finding the cozy basket at the end of each. Made by my youngest as a bedtime adventure.
+liveUrl: https://claude.ai/public/artifacts/79ff145e-e789-41f0-87ae-45962927cdba
+tech: ["HTML5 Canvas", "JavaScript", "CSS"]
+accent: "#f08b8b"
+status: live
+featured: false
+order: 1
+section: kids
+---
+
+import Diagram from '../../components/Diagram.astro';
+
+## What it is
+
+*Mochi's Garden* is a cozy little platformer my youngest made — the idea, the
+story, the cat, and the feel of it are all theirs; they built it by describing
+what they wanted to Claude and shaping it from there. You play as **Mochi**, a
+cat drifting through a dream made of **six small worlds**: *The Garden*, *The
+Rooftops*, *The Treetops*, *The Snowy Cottage*, *Above the Clouds*, and *The
+Starlit Dream*. In each one you gather every ball of **yarn** and make your way
+to a cozy **basket** at the end. When the last world is crossed, Mochi curls
+into the basket and the dream wraps soft around her. Naptime.
+
+It's deliberately gentle: **arrow keys to move, space to jump**, with a
+**double-jump** so nothing feels out of reach — and **falling is harmless**,
+there's no way to lose. Just a soft, warm world to wander through.
+
+## How it's built
+
+The whole game is a **single self-contained HTML file** — no framework, no
+libraries, no build step. The world is drawn on an **HTML5 `<canvas>`** with
+plain **JavaScript**, and the menus, HUD, and the cream-and-rose storybook look
+are styled with **CSS** (Google's *Fraunces* and *Nunito* fonts). That's the
+entire stack, which is part of what makes it nice: it's small enough to read
+top to bottom and runs anywhere a browser does.
+
+Under the hood it's a classic **game loop**: every frame reads the keyboard,
+nudges Mochi by gravity and momentum, checks her against the platforms and the
+yarn, and redraws the scene. Each of the six worlds is just a little list of
+platforms, yarn, and a basket — so adding a new world is mostly describing a new
+layout.
+
+<Diagram
+  caption="The per-frame loop: read input → update Mochi → check collisions → draw to canvas"
+  nodes={[
+    { label: "Keyboard", sub: "← → / space", kind: "external" },
+    { label: "Update", sub: "gravity + jump" },
+    { label: "Collisions", sub: "platforms · yarn · basket", kind: "service" },
+    { label: "Canvas draw", sub: "world + Mochi", kind: "store" },
+  ]}
+/>
+
+## Why it's here
+
+This launcher is a showcase of things our family builds, and that includes the
+kids. *Mochi's Garden* is the first of theirs — made for the joy of making it,
+and polished enough to actually sit and play. More to come as they build them.
